@@ -1,0 +1,6 @@
+:root { color-scheme: dark; --canvas: #08090d; --ink: #f4f5f7; --muted: #aab0bc; --blue: #1d5bff; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: var(--canvas); color: var(--ink); font-family: Arial, sans-serif; }
+main { width: min(100% - 2rem, 56rem); margin: 0 auto; padding: 8rem 0; }
+.eyebrow { color: var(--muted); font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; }
+a { color: white; background: var(--blue); border-radius: .45rem; display: inline-block; padding: .8rem 1rem; text-decoration: none; }
