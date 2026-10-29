@@ -40,23 +40,13 @@ export default function BookingPage() {
 
   return (
     <main className="booking-shell">
-      <header className="booking-nav">
-        <a className="node-brand" href="/" aria-label="Volver a NODE">
-          <span className="node-mark" aria-hidden="true"><i /><i /><i /><i /></span>
-          <span>NODE</span>
-        </a>
-        <nav aria-label="Navegación NODE">
-          <a href="https://nodeq.com.mx/#nosotros">Nosotros</a>
-          <a href="https://nodeq.com.mx/#proceso">Proceso</a>
-          <a href="https://nodeq.com.mx/#capacidades">Capacidades</a>
-          <a href="https://nodeq.com.mx/#equipo">Equipo</a>
-        </nav>
-        <a className="nav-cta" href="/reservar">Solicitar diagnóstico</a>
-      </header>
+      <a className="brand" href="/" aria-label="Volver a NODE">
+        NODE<span>/</span> AGENDA
+      </a>
 
       <header className="booking-header">
-        <p className="eyebrow">NODE / DIAGNÓSTICO</p>
-        <h1>Conversemos sobre cómo <em>acelerar tu operación.</em></h1>
+        <p className="eyebrow">Reserva una conversación</p>
+        <h1>Encuentra un espacio que funcione para ti.</h1>
         <p>
           Los horarios se muestran en tu zona horaria: <strong>{visitorZone}</strong>.
         </p>
