@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  FAILED
+}
+
+enum ReminderKind {
+  HOURS_24
+  HOURS_1
+}
+
+enum ReminderStatus {
+  PENDING
+  SENT
+  FAILED
+  CANCELLED
+}
+
+model User {
+  id                  String               @id @default(cuid())
+  email               String               @unique
+  name                String?
+  image               String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  eventTypes          EventType[]
+  availabilityRules   AvailabilityRule[]
+  dateOverrides       DateOverride[]
+  calendarConnections CalendarConnection[]
+  bookings            Booking[]            @relation("BookingHost")
+}
+
+model EventType {
+  id                    String   @id @default(cuid())
+  hostId                String
+  slug                  String   @unique
+  name                  String
+  description           String?
+  durationMinutes       Int
+  bufferBeforeMinutes   Int      @default(0)
+  bufferAfterMinutes    Int      @default(0)
+  minimumNoticeHours    Int      @default(24)
+  maximumHorizonDays    Int      @default(60)
+  dailyBookingLimit     Int?
+  priceCents            Int?
+  currency              String?  @db.VarChar(3)
+  color                 String   @default("#1D5BFF")
+  customQuestions       Json     @default("[]")
+  active                Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  host                  User     @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  bookings              Booking[]
+
+  @@index([hostId, active])
+}
+
+model AvailabilityRule {
+  id          String   @id @default(cuid())
+  hostId      String
+  weekday     Int
+  startMinute Int
+  endMinute   Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  host        User     @relation(fields: [hostId], references: [id], onDelete: Cascade)
+
+  @@index([hostId, weekday])
+}
+
+model DateOverride {
+  id          String   @id @default(cuid())
+  hostId      String
+  date        DateTime @db.Date
+  isBlocked   Boolean  @default(false)
+  intervals   Json     @default("[]")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  host        User     @relation(fields: [hostId], references: [id], onDelete: Cascade)
+
+  @@unique([hostId, date])
+  @@index([hostId, date])
+}
+
+model Booking {
+  id                 String        @id @default(cuid())
+  hostId             String
+  eventTypeId        String
+  status             BookingStatus @default(PENDING)
+  inviteeName        String
+  inviteeEmail       String
+  inviteePhone       String?
+  inviteeNotes       String?
+  answers            Json          @default("{}")
+  startUtc           DateTime
+  endUtc             DateTime
+  inviteeTimezone    String
+  cancelToken        String        @unique
+  tokenExpiresAt     DateTime
+  idempotencyKey     String        @unique
+  googleEventId      String?       @unique
+  googleMeetUrl      String?
+  cancelledAt        DateTime?
+  cancellationReason String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  host               User          @relation("BookingHost", fields: [hostId], references: [id], onDelete: Restrict)
+  eventType          EventType     @relation(fields: [eventTypeId], references: [id], onDelete: Restrict)
+  reminderJobs       ReminderJob[]
+
+  @@unique([hostId, startUtc])
+  @@index([hostId, startUtc, endUtc])
+  @@index([eventTypeId, startUtc])
+  @@index([status, startUtc])
+}
+
+model CalendarConnection {
+  id                    String   @id @default(cuid())
+  hostId                String
+  googleAccountEmail    String
+  encryptedAccessToken  String
+  encryptedRefreshToken String
+  tokenExpiresAt        DateTime?
+  selectedCalendarIds   Json     @default("[]")
+  targetCalendarId      String?
+  syncToken             String?
+  watchChannelId        String?
+  watchResourceId       String?
+  watchExpiresAt        DateTime?
+  requiresReconnection  Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  host                  User     @relation(fields: [hostId], references: [id], onDelete: Cascade)
+
+  @@unique([hostId, googleAccountEmail])
+  @@index([hostId, requiresReconnection])
+  @@index([watchExpiresAt])
+}
+
+model ReminderJob {
+  id        String         @id @default(cuid())
+  bookingId String
+  kind      ReminderKind
+  scheduledFor DateTime
+  status    ReminderStatus @default(PENDING)
+  sentAt    DateTime?
+  attempts  Int            @default(0)
+  lastError String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  booking   Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@unique([bookingId, kind])
+  @@index([status, scheduledFor])
+}
